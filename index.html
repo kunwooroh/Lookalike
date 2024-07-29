@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Animal Lookalike</title>
+  <!-- 부트스트랩 CSS 포함 -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Dropzone.js CSS 포함 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" rel="stylesheet">
+  <!-- Font Awesome CSS 포함 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <style>
+    body, html {
+      height: 100%;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start; /* 상단 정렬 */
+      align-items: center;
+      height: 100%;
+      padding-top: 20px; /* 상단에 약간의 여백 추가 */
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 20px;
+    }
+    #result {
+      margin-top: 10px;
+      background-color: white; /* 배경색을 흰색으로 지정 */
+      border: 1px solid white; /* 테두리 색을 흰색으로 지정 */
+    }
+    .spinner-border {
+      display: none;
+      margin-top: 20px;
+    }
+    .form-group {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+    .form-group input {
+      display: inline-block;
+      width: auto;
+    }
+    .dropzone {
+      border: 2px dashed #007BFF;
+      padding: 20px;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
+      border-radius: 10px; /* 테두리에 라운드 추가 */
+    }
+    .dz-preview {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #dropzone-message {
+      font-size: 0.8em; /* 글자 크기를 작게 설정 */
+      position: absolute;
+      top: 70%;
+      transform: translateY(-50%);
+      margin-top: 0;
+    }
+    #reset-button {
+      display: none;
+      margin-top: 10px;
+      width: 250px; /* 버튼 가로 크기 조정 */
+    }
+    #file-select-button {
+      position: absolute;
+      top: 45%;
+      transform: translateY(-50%);
+      width: 150px; /* 버튼 가로 크기 조정 */
+      margin-top: 0;
+    }
+    .sns-icons {
+      margin-top: 10px; /* 간격 조정 */
+    }
+    .sns-icons a {
+      margin: 0 10px;
+      color: #007BFF;
+      font-size: 1.5em;
+    }
+    .footer {
+      margin-top: 10px; /* 간격 조정 */
+      font-size: 0.8em;
+      color: #555;
+    }
+    .alert {
+    position: relative;
+    padding: 0rem 0rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+    }
+    img {
+    max-width: 100%;
+    height: auto;
+    margin-top: 0px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container text-center">
+    <h1 class="my-4">AI Animal Lookalike</h1>
+    <div id="translate"></div>
+    <form id="upload-form" class="dropzone mb-4 w-50">
+      <div class="dz-message d-flex flex-column align-items-center" id="dz-message-container">
+        <button id="file-select-button" class="btn btn-primary btn-sm mt-0" type="button">Select File</button>
+        <span id="dropzone-message">🌟Drag and drop an image here, or click to select a file🌟</span>
+      </div>
+    </form>
+    <button id="reset-button" class="btn btn-sm btn-secondary">Reset</button>
+    <div class="text-center">
+      <div class="spinner-border" role="status" id="loading-spinner">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+    <div id="result" class="alert alert-info w-50 text-center" role="alert"></div>
+    <!-- SNS Icons -->
+    <div class="sns-icons">
+      <a href="https://www.facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+      <a href="https://www.instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+      <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+      <a href="https://www.linkedin.com" target="_blank"><i class="fab fa-linkedin"></i></a>
+      <a href="https://www.kakao.com" target="_blank"><i class="fas fa-comment"></i></a>
+    </div>
+    
+    <!-- Copyright -->
+    <div class="footer">
+      &copy; 2024 K.W ROH. All rights reserved.
+    </div>
+  </div>
+  <!-- 부트스트랩과 종속성 JS 포함 -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- Dropzone.js 포함 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
+  <!-- Font Awesome JS 포함 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+  <script>
+    Dropzone.autoDiscover = false;
+
+    const dropzone = new Dropzone("#upload-form", {
+      url: "/upload",
+      autoProcessQueue: true,
+      acceptedFiles: "image/*",
+      maxFiles: 1, // 최대 파일 수 1로 설정
+      paramName: "image", // Multer가 인식할 필드 이름으로 설정
+      init: function() {
+        this.on("sending", function(file) {
+          document.getElementById('loading-spinner').style.display = 'block';
+        });
+        this.on("success", function(file, response) {
+          document.getElementById('loading-spinner').style.display = 'none';
+
+          // dz-message-container 삭제
+          const dzMessageContainer = document.getElementById('dz-message-container');
+          dzMessageContainer.parentNode.removeChild(dzMessageContainer);
+
+          // 기존 이미지를 지우고 새 이미지 추가
+          const previewElement = file.previewElement;
+          const imageUrl = URL.createObjectURL(file);
+          const imgElement = document.createElement('img');
+          imgElement.src = imageUrl;
+          imgElement.className = 'img-thumbnail';
+
+          if (previewElement) {
+            previewElement.innerHTML = '';
+            previewElement.appendChild(imgElement);
+          }
+
+          document.getElementById('result').innerText = `category: ${response.category}, Reason: ${response.reason}`;
+          document.getElementById('result').classList.remove('alert-info');
+          document.getElementById('result').classList.add('alert-success');
+
+          // 초기화 버튼 표시
+          document.getElementById('reset-button').style.display = 'block';
+        });
+        this.on("error", function(file, errorMessage) {
+          document.getElementById('loading-spinner').style.display = 'none';
+          document.getElementById('result').innerText = `An error occurred while processing the image: ${errorMessage}`;
+          document.getElementById('result').classList.remove('alert-info');
+          document.getElementById('result').classList.add('alert-danger');
+          
+          // 초기화 버튼 표시
+          document.getElementById('reset-button').style.display = 'block';
+        });
+        this.on("maxfilesexceeded", function(file) {
+          this.removeAllFiles();
+          this.addFile(file);
+        });
+      },
+      previewsContainer: "#upload-form" // Previews container 설정
+    });
+
+    // 파일 선택 버튼 클릭 시 Dropzone 파일 선택 다이얼로그 열기
+    document.getElementById('file-select-button').addEventListener('click', function() {
+      dropzone.hiddenFileInput.click();
+    });
+
+    // 초기화 버튼 클릭 시 Dropzone 초기화
+    document.getElementById('reset-button').addEventListener('click', function() {
+      dropzone.removeAllFiles(true);
+
+      // dz-message-container 다시 추가
+      const dzMessageContainer = document.createElement('div');
+      dzMessageContainer.className = 'dz-message d-flex flex-column align-items-center';
+      dzMessageContainer.id = 'dz-message-container';
+
+      const fileSelectButton = document.createElement('button');
+      fileSelectButton.id = 'file-select-button';
+      fileSelectButton.className = 'btn btn-primary btn-sm mt-0';
+      fileSelectButton.type = 'button';
+      fileSelectButton.textContent = 'Select File';
+      fileSelectButton.addEventListener('click', function() {
+        dropzone.hiddenFileInput.click();
+      });
+
+      const dropzoneMessage = document.createElement('span');
+      dropzoneMessage.id = 'dropzone-message';
+      dropzoneMessage.textContent = '🌟Drag and drop an image here, or click to select a file🌟';
+
+      dzMessageContainer.appendChild(fileSelectButton);
+      dzMessageContainer.appendChild(dropzoneMessage);
+
+      document.querySelector('.dropzone').prepend(dzMessageContainer);
+
+      document.getElementById('result').innerText = '';
+      document.getElementById('result').classList.remove('alert-success', 'alert-danger');
+      document.getElementById('result').classList.add('alert-info');
+      this.style.display = 'none';
+    });
+  </script>
+  <script>
+    function onLoadTranslate() {
+        new google.translate.TranslateElement(
+            {pageLanguage: 'en'},
+            'translate'
+        );
+    }
+</script>
+<script src="https://translate.google.com/translate_a/element.js?cb=onLoadTranslate"></script>
+</body>
+</html>
